@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Канбан продуктовых инициатив Hantico</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f4f5f7;
+    color: #1a1a2e;
+    padding: 32px 0 60px;
+  }
+  header.page-header {
+    max-width: 1400px;
+    margin: 0 auto 20px;
+    padding: 0 24px;
+    text-align: center;
+  }
+  header.page-header h1 { font-size: 26px; font-weight: 700; margin-bottom: 6px; }
+  header.page-header p { font-size: 13.5px; color: #6b7280; }
+
+  .systems-banner {
+    max-width: 1400px;
+    margin: 0 auto 22px;
+    padding: 12px 18px;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; flex-wrap: wrap;
+    gap: 12px;
+    font-size: 13px;
+    color: #374151;
+  }
+  .sys-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 14px;
+    font-weight: 700; font-size: 12px;
+  }
+  .sys-chip.team { background: #dbeafe; color: #1d4ed8; }
+  .sys-chip.kaiten { background: #ede9fe; color: #6d28d9; }
+  .systems-banner .arrow { color: #9ca3af; font-size: 16px; }
+
+  .board-wrap { overflow-x: auto; padding: 0 24px 24px; }
+  .board {
+    display: flex; gap: 10px;
+    width: max-content;
+    padding: 14px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    align-items: stretch;
+  }
+
+  .sys-group {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 10px 10px 12px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #e5e7eb;
+  }
+  .sys-group.team   { border-top: 4px solid #60a5fa; }
+  .sys-group.kaiten { border-top: 4px solid #7c3aed; }
+  .sys-group > .sys-title {
+    font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    color: #475569;
+    padding: 0 4px 4px;
+  }
+  .sys-group > .sys-title .sys-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; vertical-align: middle;
+  }
+  .sys-group.team   .sys-dot { background: #60a5fa; }
+  .sys-group.kaiten .sys-dot { background: #7c3aed; }
+  .sys-group > .cols { display: flex; gap: 8px; align-items: stretch; }
+
+  /* Create-wrapper: МК колонка «⚙️ Создание» как рамка вокруг Kaiten */
+  .create-wrapper {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 10px 10px 12px;
+    border-radius: 12px;
+    background: #eff6ff;
+    border: 1px solid #93c5fd;
+    border-top: 4px solid #60a5fa;
+  }
+  .create-wrapper > .wrap-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 0 4px 4px;
+  }
+  .create-wrapper > .wrap-head .wrap-title {
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    color: #1d4ed8;
+  }
+  .create-wrapper > .wrap-head .wrap-title .sys-dot {
+    display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+    background: #60a5fa; margin-right: 6px; vertical-align: middle;
+  }
+  .create-wrapper > .wrap-head .wrap-sub {
+    font-size: 10.5px; color: #1e3a8a;
+    padding: 2px 8px; background: #dbeafe; border-radius: 10px;
+  }
+  .create-wrapper .sys-group.kaiten {
+    background: #faf5ff;
+    border: 1px solid #ddd6fe;
+    border-top: 4px solid #7c3aed;
+  }
+
+  /* МК-колонка «⚙️ Создание» как горизонтальная шапка внутри create-wrapper */
+  .create-wrapper .col.wrapper-head {
+    width: auto;
+    min-height: 0;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 10px 14px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-top: 3px solid #60a5fa;
+  }
+  .create-wrapper .col.wrapper-head .col-head { flex: 0 0 auto; }
+  .create-wrapper .col.wrapper-head .col-name { font-size: 14.5px; }
+  .create-wrapper .col.wrapper-head .col-desc { flex: 1 1 360px; font-size: 11.5px; }
+  .create-wrapper .col.wrapper-head .col-norm { flex: 0 0 auto; }
+  .create-wrapper .col.wrapper-head .stage-chips { display: none; }
+  .create-wrapper .col.wrapper-head .col-owners { flex: 0 0 auto; margin-top: 0; padding-top: 0; }
+
+  .handoff {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 12px 10px; min-width: 100px;
+    gap: 6px;
+    color: #b45309;
+  }
+  .handoff .arrow { font-size: 28px; line-height: 1; }
+  .handoff .label {
+    font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+    text-align: center; line-height: 1.25;
+  }
+  .handoff .sub { font-size: 10px; color: #92400e; text-align: center; line-height: 1.3; }
+
+  .col {
+    width: 240px;
+    background: #fff;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+    border-top: 3px solid;
+    padding: 11px 12px 12px;
+    display: flex; flex-direction: column;
+    gap: 8px;
+    cursor: pointer;
+    transition: box-shadow 0.15s, transform 0.15s;
+    min-height: 360px;
+  }
+  .col:hover { box-shadow: 0 8px 22px rgba(0,0,0,0.10); transform: translateY(-2px); }
+  .col.team   { border-top-color: #60a5fa; }
+  .col.kaiten { border-top-color: #7c3aed; }
+  .col.reject { border-top-color: #dc2626; background: #fff7f7; }
+  .col.done   { border-top-color: #16a34a; }
+  .col.gate   { border-top-color: #ea580c; background: linear-gradient(180deg, #fff7ed 0%, #fffbeb 100%); }
+
+  .col .col-head {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+  }
+  .col .col-name { font-size: 13.5px; font-weight: 700; line-height: 1.25; }
+  .col .col-badge {
+    font-size: 10px; font-weight: 700;
+    padding: 2px 7px; border-radius: 10px;
+    white-space: nowrap;
+  }
+  .col.team   .col-badge { background: #dbeafe; color: #1d4ed8; }
+  .col.kaiten .col-badge { background: #ede9fe; color: #6d28d9; }
+  .col.reject .col-badge { background: #fee2e2; color: #b91c1c; }
+  .col.done   .col-badge { background: #dcfce7; color: #166534; }
+  .col.gate   .col-badge { background: #ffedd5; color: #9a3412; }
+
+  .col .col-desc { font-size: 11.5px; color: #4b5563; line-height: 1.4; }
+
+  .stage-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .stage-chip {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 10.5px; color: #334155;
+    background: #f1f5f9; border: 1px solid #e2e8f0;
+    padding: 2px 6px 2px 3px; border-radius: 10px;
+    cursor: pointer;
+  }
+  .stage-chip:hover { background: #e2e8f0; }
+  .stage-chip .n {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 18px; height: 18px; border-radius: 50%;
+    background: #64748b; color: #fff;
+    font-size: 10px; font-weight: 700;
+    padding: 0 4px;
+  }
+
+  .col .col-section b {
+    display: block; font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: #374151; margin-bottom: 3px;
+  }
+  .col .col-section ul { padding-left: 14px; font-size: 11px; line-height: 1.4; }
+  .col .col-section li { color: #4b5563; margin: 1px 0; }
+
+  .col .col-owners { display: flex; flex-wrap: wrap; gap: 3px; margin-top: auto; padding-top: 4px; }
+  .col .owner-tag {
+    background: #eff6ff; color: #1d4ed8;
+    font-size: 10px; padding: 1px 7px; border-radius: 12px;
+  }
+
+  .col-addon {
+    background: linear-gradient(90deg, #fef3c7, #fef9c3);
+    border-left: 3px solid #d97706;
+    padding: 5px 7px; border-radius: 4px;
+    font-size: 10px; color: #78350f; line-height: 1.35;
+  }
+  .col-addon b { font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.4px; color: #92400e; display: block; margin-bottom: 2px; }
+
+  .col-norm {
+    display: inline-block; font-size: 10px; font-weight: 600;
+    color: #475569; background: #f1f5f9;
+    padding: 2px 7px; border-radius: 10px; border: 1px solid #e2e8f0;
+  }
+
+  /* Gate A special block inside "Создание" */
+  .gate-inline {
+    background: linear-gradient(160deg, #fef2f2, #fff7ed);
+    border: 1.5px solid #dc2626;
+    border-radius: 8px;
+    padding: 7px 9px;
+    font-size: 10.5px;
+    color: #7f1d1d;
+  }
+  .gate-inline .gate-t {
+    font-weight: 700; font-size: 11px; color: #991b1b; margin-bottom: 3px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  .legend {
+    max-width: 1400px;
+    margin: 18px auto 0;
+    display: flex; flex-wrap: wrap; gap: 14px; justify-content: center;
+    padding: 0 24px;
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #374151; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+
+  .summary {
+    max-width: 1000px;
+    margin: 22px auto 0;
+    padding: 16px 20px;
+    background: #fff;
+    border-radius: 12px;
+    border-left: 4px solid #7c3aed;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .summary h3 { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #7c3aed; margin-bottom: 8px; }
+  .summary p { font-size: 13px; color: #374151; line-height: 1.55; margin: 4px 0; }
+  .summary code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-family: ui-monospace, 'SF Mono', monospace; font-size: 12px; }
+
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.45);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 1000; padding: 20px;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: #fff; border-radius: 14px;
+    max-width: 720px; width: 100%; max-height: 85vh;
+    display: flex; flex-direction: column;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+    transform: translateY(16px);
+    transition: transform 0.2s;
+  }
+  .modal-overlay.open .modal { transform: translateY(0); }
+  .modal-header {
+    padding: 18px 24px 14px;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 10px;
+  }
+  .modal-title { font-size: 17px; font-weight: 700; line-height: 1.3; }
+  .modal-title small {
+    display: block; font-size: 12px; color: #6b7280;
+    font-weight: 500; margin-top: 4px;
+  }
+  .modal-close {
+    width: 32px; height: 32px; border: none; background: #f3f4f6;
+    border-radius: 50%; cursor: pointer; font-size: 18px; flex-shrink: 0;
+    color: #6b7280;
+  }
+  .modal-close:hover { background: #e5e7eb; color: #111; }
+  .modal-body {
+    padding: 20px 24px; overflow-y: auto;
+    font-size: 14px; line-height: 1.55; color: #374151;
+  }
+  .modal-body h4 {
+    font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: #6b7280;
+    margin: 18px 0 6px;
+  }
+  .modal-body h4:first-child { margin-top: 0; }
+  .modal-body p { margin: 4px 0; }
+  .modal-body ul { padding-left: 20px; }
+  .modal-body li { margin: 3px 0; }
+  .modal-body .io {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px;
+  }
+  .modal-body .io-block {
+    background: #f9fafb; padding: 10px 12px; border-radius: 8px;
+  }
+  .modal-body .io-block.in { border-left: 3px solid #7c3aed; }
+  .modal-body .io-block.out { border-left: 3px solid #059669; }
+  .modal-body .io-block h5 { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .modal-body .io-block.in h5 { color: #7c3aed; }
+  .modal-body .io-block.out h5 { color: #059669; }
+  .modal-body .io-block .example {
+    font-size: 12px; color: #6b7280; font-style: italic;
+    margin-top: 6px; padding-top: 6px; border-top: 1px dashed #e5e7eb;
+  }
+
+  @media (max-width: 900px) {
+    .modal-body .io { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <h1>Канбан продуктовых инициатив Hantico</h1>
+  <p>2 системы · 13 колонок МК + 10 колонок Kaiten · «⚙️ Создание» в МК = контейнер для Kaiten · нажмите на колонку или этап для деталей</p>
+</header>
+
+<div class="systems-banner">
+  <span class="sys-chip team">🔵 Моя команда</span>
+  <span class="arrow">→</span>
+  <span class="sys-chip kaiten">🟣 Kaiten «Проекты»</span>
+  <span class="arrow">→</span>
+  <span class="sys-chip team">🔵 Моя команда (финал)</span>
+</div>
+
+<div class="board-wrap">
+  <div class="board" id="board"></div>
+</div>
+
+<div class="legend" id="legend"></div>
+
+<div class="summary">
+  <h3>Маршрут инициативы по колонкам</h3>
+  <p><b>МояКоманда (pre):</b> <code>Идея → Инициатива → Проверка на актуальность → Оценка востребованности → Оценка эффекта → Финансовый расчёт → 🚦 Очередь инициатив</code></p>
+  <p style="margin-top:8px;"><b>МояКоманда · ⚙️ Создание</b> <i>(одна колонка в МК, внутри — полный конвейер Kaiten):</i><br>
+  <code>Kaiten: Проектирование → IT ресерч → Фин. оценка → Проектный комитет → Разработка → Интегр. тестирование → Сдача → Передача на сервис → Релиз → Готово</code></p>
+  <p style="margin-top:8px;"><b>МояКоманда (post):</b> <code>Опытная эксплуатация → Промышленная эксплуатация → Обзор результатов → ✅ Завершено</code></p>
+  <p style="margin-top:10px;">Точки передачи между системами: <b>МК → Kaiten</b> после Gate A Go (карточка МК → «⚙️ Создание», карточка Kaiten → «Проектирование») и <b>Kaiten → МК</b> после релиза («Готово» Kaiten → «Опытная эксплуатация» МК).</p>
+</div>
+
+<div class="summary" style="border-left-color:#dc2626;">
+  <h3 style="color:#dc2626;">🚦 Gate A — Go / No-Go</h3>
+  <p>Отдельная колонка МК <b>«🚦 Очередь инициатив»</b> после финансового расчёта. Решение РП за 3 дня по 4 критериям: востребованность ≥60% ЦА, эффект ≥10% метрики или ≥100K₽/мес, окупаемость ≤12 мес, попадание в OKR. <b>Go</b> → карточка МК переводится в «⚙️ Создание», в Kaiten создаётся карточка в «Проектирование». <b>No-Go</b> → карточка МК в «Отклонённые идеи».</p>
+</div>
+
+<div class="summary" style="border-left-color:#059669;">
+  <h3 style="color:#059669;">TO-BE улучшения процесса</h3>
+  <p><b>🔍 Tech Lead review</b> внутри колонки «Проектирование» Kaiten (30 мин, до упаковки ТЗ) — ранняя проверка технической реализуемости.</p>
+  <p><b>🛡 Security + Support checklist</b> встроен в шаблон ТЗ как раздел «Операционная готовность» — вовлекаем ИБ и Support на этапе ТЗ, а не на релизе.</p>
+  <p><b>⏱ Нормативы длительности</b> указаны на каждой колонке; в паспорте — «Журнал этапов» с полями Вход / Выход / Факт / Норма / Статус.</p>
+</div>
+
+<div class="modal-overlay" id="modalOverlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="modal-close" onclick="closeModal()" aria-label="Закрыть">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<script>
+// ----- 22 stage-level process steps (детализация колонок) -----
+const stages = [
+  { n:1, name:'Идея', col:'team-idea',
+    description:'Возникновение идеи от сотрудника или руководителя',
+    actions:['Формулирование идеи с обоснованием ценности','Оформление в приложение'],
+    artifacts:['Оформленная идея'],
+    owners:['Автор идеи','Руководитель отдела'],
+    input:{ text:'Наблюдение, проблема пользователя или бизнес-потребность',
+            example:'«Водители жалуются на долгое ожидание при верификации документов» — наблюдение операционного директора' },
+    output:{ text:'Оформленная идея с обоснованием ценности',
+             example:'Запись: «Авто-верификация документов — устранит ручную проверку, водитель активируется за 10 мин»' } },
+  { n:2, name:'Инициатива', col:'team-initiative',
+    description:'Фиксация идеи как официальной инициативы на доске команды продукта',
+    actions:['Создание карточки на доске','Заполнение 7 обязательных полей: сервис, область, цель, описание, ожидаемый итог, эффект'],
+    artifacts:['Карточка инициативы на доске'],
+    owners:['Руководитель отдела'],
+    input:{ text:'Оформленная идея от автора',
+            example:'«Авто-верификация документов» — описание проблемы от операционного директора' },
+    output:{ text:'Карточка в колонке «Очередь идей» с 7 заполненными полями',
+             example:'Карточка: сервис — мобайл, цель — убрать ручную проверку, эффект — −30 мин на регистрацию' } },
+  { n:3, name:'Первичная проверка на актуальность', col:'team-check',
+    description:'Проверка соответствия стратегии продукта и решение о взятии в работу',
+    actions:['Анализ инициативы руководителем продукта','Уточнение деталей','Создание паспорта (Блок 1) или отклонение'],
+    artifacts:['Паспорт проекта (Блок 1)'],
+    owners:['Руководитель продукта'],
+    input:{ text:'Карточка инициативы на доске',
+            example:'Карточка «Авто-верификация документов водителя» с 7 полями' },
+    output:{ text:'Паспорт проекта (Блок 1) или отказ с обоснованием',
+             example:'Создан «Паспорт PRJ-2026-042» — или: «Отказ: дублирует интеграцию с партнёром X»' } },
+  { n:4, name:'Оценка востребованности', col:'team-demand',
+    description:'Валидация спроса на решение у целевой аудитории',
+    actions:['Опросы и custdev-интервью','Тестирование гипотез'],
+    artifacts:['Результаты custdev / опроса (Блок 2 паспорта)'],
+    owners:['Руководитель продукта'],
+    input:{ text:'Паспорт проекта (Блок 1)',
+            example:'Паспорт PRJ-2026-042, Блок 1: проблема — ручная проверка документов' },
+    output:{ text:'Результаты custdev / опроса — Блок 2 обновлён',
+             example:'«Опросили 50 водителей: 78% сталкивались с задержками, 12 из 50 отказались от регистрации»' } },
+  { n:5, name:'Оценка эффекта', col:'team-effect',
+    description:'Определение метрики успеха и её ожидаемого изменения',
+    actions:['Формулирование конкретной метрики','Оценка ожидаемого прироста в измеримых показателях'],
+    artifacts:['Метрика успеха и её изменение (Блок 2)'],
+    owners:['Руководитель продукта'],
+    input:{ text:'Подтверждённая востребованность (Блок 2)',
+            example:'78% водителей подтвердили проблему с задержками при верификации' },
+    output:{ text:'Метрика успеха + ожидаемое изменение — Блок 2 обновлён',
+             example:'«Время регистрации: с 45 до 15 мин (−67%). Конверсия: с 68% до 85%»' } },
+  { n:6, name:'Финансовый расчёт «на салфетке»', col:'team-finance',
+    description:'Быстрая предварительная финансовая прикидка',
+    actions:['Расчёт выгоды / экономии','Прикидка стоимости разработки','Оценка окупаемости'],
+    artifacts:['Финансовый расчёт и эффект (Блок 2 завершён)'],
+    owners:['Руководитель продукта'],
+    input:{ text:'Оценённый эффект с метриками (Блок 2)',
+            example:'Снижение времени регистрации на 67%, рост конверсии на 17%' },
+    output:{ text:'Предварительная оценка экономического влияния — Блок 2 завершён',
+             example:'«2 менеджера × 120K₽ = 240K₽/мес. Разработка ≈ 600K₽. Окупаемость ≈ 2.5 мес»' } },
+  { n:7, name:'Прототипирование интерфейса', col:'ktn-design',
+    description:'Создание пользовательского интерфейса в виде прототипа',
+    actions:['Разработка Lo-fi прототипа','Отражение логики и ключевых сценариев'],
+    artifacts:['Lo-fi прототип интерфейса (Figma)'],
+    owners:['Дизайнер'],
+    input:{ text:'Паспорт проекта с предварительными оценками (Блоки 1–2)',
+            example:'Паспорт PRJ-2026-042: проблема описана, метрики определены, финансовая оценка есть' },
+    output:{ text:'Lo-fi прототип интерфейса',
+             example:'Figma: экраны «Загрузка», «Ожидание», «Успех», «Ошибка — повторите»' } },
+  { n:8, name:'Аналитика', col:'ktn-design',
+    description:'Разработка детальных бизнес-требований AS-IS / TO-BE',
+    actions:['Изучение инициативы и прототипа','Описание AS-IS / TO-BE','Формулировка сценариев и ограничений'],
+    artifacts:['Документ с бизнес-требованиями (Блок 3 паспорта)'],
+    owners:['Бизнес-аналитик'],
+    input:{ text:'Lo-fi прототип интерфейса',
+            example:'Figma Lo-fi: 4 экрана авто-верификации' },
+    output:{ text:'Документ с бизнес-требованиями (AS-IS / TO-BE)',
+             example:'«Авто-верификация AS-IS/TO-BE»: менеджер проверяет 30–45 мин → API проверяет за 10–30 сек' } },
+  { n:9, name:'Разработка дизайна', col:'ktn-design',
+    description:'Разработка детального визуального дизайна интерфейса',
+    actions:['Разработка Hi-fi макетов','Согласование визуальных решений','Подготовка UI-компонентов'],
+    artifacts:['Hi-fi макеты интерфейса (Figma)'],
+    owners:['Дизайнер','Руководитель продукта'],
+    input:{ text:'Lo-fi прототип + бизнес-требования',
+            example:'Figma Lo-fi + документ AS-IS/TO-BE' },
+    output:{ text:'Hi-fi макеты интерфейса',
+             example:'Figma Hi-fi: финальные экраны с типографикой и компонентами' } },
+  { n:10, name:'Упаковка ТЗ', col:'ktn-design',
+    description:'Формализация всех требований и комплектация макетов',
+    actions:['Подготовка полного ТЗ','Комплектация ТЗ с Hi-fi макетами','Проверка руководителем продукта'],
+    artifacts:['Техническое задание + финальные макеты дизайна'],
+    owners:['Бизнес-аналитик','Дизайнер','Руководитель продукта'],
+    input:{ text:'Hi-fi макеты + бизнес-требования',
+            example:'Figma Hi-fi + документ AS-IS/TO-BE' },
+    output:{ text:'Техническое задание + финальные макеты',
+             example:'«ТЗ Авто-верификация v1.0» с 12 функц. требованиями + Hi-fi макеты' } },
+  { n:11, name:'Оценка ТЗ', col:'ktn-research',
+    description:'Техническая оценка объёма и сложности по готовому ТЗ',
+    actions:['Анализ ТЗ','Оценка объёма разработки','Оценка инфраструктуры и технических рисков'],
+    artifacts:['Паспорт — Блок 4 (техническая часть)'],
+    owners:['Тех лид'],
+    input:{ text:'ТЗ + финальные макеты дизайна',
+            example:'«ТЗ Авто-верификация v1.0» + Hi-fi макеты' },
+    output:{ text:'Оценка объёма разработки и инфраструктуры — Блок 4 (часть 1)',
+             example:'«Backend: 3 спринта. Mobile: 2 спринта. API: 12K₽/мес»' } },
+  { n:12, name:'Финансовая оценка', col:'ktn-finance',
+    description:'Расчёт полной стоимости и ROI на основе технической оценки',
+    actions:['Калькуляция стоимости разработки и инфраструктуры','Определение ROI и срока окупаемости'],
+    artifacts:['Паспорт — Блок 4 завершён'],
+    owners:['Руководитель финансов'],
+    input:{ text:'Паспорт с технической оценкой (Блок 4, часть 1)',
+            example:'Тех. оценка: Backend 3 спринта + Mobile 2 спринта, инфра 12K₽/мес' },
+    output:{ text:'Бюджет, ROI, срок окупаемости — Блок 4 закрыт',
+             example:'«Бюджет: 640K₽. ROI: 2.3x за год. Срок окупаемости: 5 мес»' } },
+  { n:13, name:'Проектный комитет', col:'ktn-committee',
+    description:'Ключевая точка принятия решения о запуске проекта',
+    actions:['Рассмотрение полного Паспорта проекта','Заслушивание автора и PM','Принятие решения','Выделение ресурса и места в дорожной карте'],
+    artifacts:['Паспорт — Блок 5 (решение комитета)'],
+    owners:['Директор IT','CEO','Автор идеи','Руководитель продукта'],
+    input:{ text:'Полный Паспорт проекта (Блоки 1–4 заполнены)',
+            example:'Паспорт PRJ-2026-042: требования, ТЗ, тех. оценка, бюджет 640K₽, ROI 2.3x' },
+    output:{ text:'Решение + место в дорожной карте + ресурс',
+             example:'«Одобрен. Q3 2026, июль–август. Смирнов + Козлов, дизайнер на поддержке»' } },
+  { n:14, name:'Бэклог разработки', col:'ktn-dev',
+    description:'Подготовка к разработке и декомпозиция на задачи',
+    actions:['Внесение задач в бэклог','Планирование согласно роадмапу','Подтверждение старта работ'],
+    artifacts:['Задачи в бэклоге, актуальный план разработки'],
+    owners:['Руководитель департамента разработки'],
+    input:{ text:'Одобренный проект, ТЗ, место в дорожной карте',
+            example:'Паспорт одобрен, ТЗ v1.0, запуск Q3 2026' },
+    output:{ text:'Задачи в бэклоге, старт работ подтверждён',
+             example:'23 задачи в Jira, первый спринт с 01.07.2026' } },
+  { n:15, name:'Разработка', col:'ktn-dev',
+    description:'Непосредственная разработка функционала по ТЗ и макетам',
+    actions:['Кодирование и реализация ТЗ','Внутреннее тестирование','Управление блокерами'],
+    artifacts:['Разработанный функционал, готовый к тестированию'],
+    owners:['Руководитель проекта'],
+    input:{ text:'Задачи в бэклоге, ТЗ, финальные макеты',
+            example:'23 задачи в Jira, «ТЗ v1.0», Hi-fi макеты' },
+    output:{ text:'Функционал, готовый к тестированию',
+             example:'PR «feature/auto-verification» прошёл code review, на staging' } },
+  { n:16, name:'Интеграционное тестирование', col:'ktn-test',
+    description:'Проверка качества и интеграции со смежными системами',
+    actions:['Прогон сценариев','Выявление и логирование дефектов','Итерационное исправление'],
+    artifacts:['Отчёт о тестировании + исправленные дефекты'],
+    owners:['Руководитель проекта','Тех лид'],
+    input:{ text:'Функционал на staging-стенде',
+            example:'feature/auto-verification на staging, unit-тесты зелёные' },
+    output:{ text:'Тест-отчёт + исправленные дефекты',
+             example:'«48/50 сценариев OK, 2 дефекта (P2) закрыты. Ready for release»' } },
+  { n:17, name:'Сдача проекта', col:'ktn-accept',
+    description:'Проверка соответствия ТЗ и приёмка руководителем продукта',
+    actions:['Проверка функционала на соответствие ТЗ и макетам','Подписание акта приёмки или возврат на доработку'],
+    artifacts:['Акт приёмки / список замечаний'],
+    owners:['Руководитель продукта'],
+    input:{ text:'Протестированный функционал с закрытыми дефектами',
+            example:'Тест-отчёт «48/50 OK», функционал на staging' },
+    output:{ text:'Акт приёмки или список замечаний',
+             example:'Акт приёмки подписан руководителем продукта. Готов к передаче.' } },
+  { n:18, name:'Передача на сервис', col:'ktn-handoff',
+    description:'Подготовка к релизу с точки зрения операционной поддержки',
+    actions:['Проверка техработоспособности и безопасности','Подготовка документации для поддержки','Получение заключения ИБ'],
+    artifacts:['Инструкция для поддержки + заключение ИБ'],
+    owners:['Лид поддержки','Специалист ИБ'],
+    input:{ text:'Подписанный акт приёмки',
+            example:'Акт приёмки от РП, документация подготовлена' },
+    output:{ text:'Инструкция для поддержки + заключение ИБ',
+             example:'«Инструкция: 3 стр. (FAQ + эскалация). ИБ: уязвимостей не выявлено»' } },
+  { n:19, name:'Релиз', col:'ktn-release',
+    description:'Развёртывание функционала в production',
+    actions:['Раскатка по стендам до production','Базовые проверки работоспособности','Мониторинг деплоя'],
+    artifacts:['Функционал в production'],
+    owners:['Тех лид','DevOps инженер'],
+    input:{ text:'Положительные заключения от поддержки и ИБ',
+            example:'Заключения готовы, DevOps подтвердил готовность' },
+    output:{ text:'Функционал опубликован в production',
+             example:'v2.14.0 опубликован и развёрнут на prod 28.07.2026' } },
+  { n:20, name:'Опытная эксплуатация', col:'team-pilot',
+    description:'Пилотный период с усиленным мониторингом',
+    actions:['Оценка качества решения и влияния на метрики','Сбор информации о багах и недостатках'],
+    artifacts:['Отчёт о качестве и влиянии на метрики'],
+    owners:['Руководитель продукта','Руководитель направления'],
+    input:{ text:'Функционал в production, метрики подключены',
+            example:'v2.14.0 в prod, дашборд активирован' },
+    output:{ text:'Оценка качества и влияния на метрики',
+             example:'«За 2 нед: 847 проверок, ср. время — 18 сек, 4 исключения»' } },
+  { n:21, name:'Промышленная эксплуатация', col:'team-prod',
+    description:'Стабильная работа функционала в штатном режиме',
+    actions:['Штатная работа функционала','Обработка запросов поддержкой','Устранение дефектов в рабочем порядке'],
+    artifacts:['Стабильная работа функционала'],
+    owners:['Руководитель направления'],
+    input:{ text:'Стабильная опытная эксплуатация',
+            example:'2 нед. стабильной работы: 4 инцидента P3, 0 P1/P2' },
+    output:{ text:'Функционал в штатном режиме',
+             example:'Статус «Промышленная эксплуатация». Поддержка принимает ответственность.' } },
+  { n:22, name:'Обзор результатов', col:'team-review',
+    description:'Финальный анализ проекта: ожидание vs факт',
+    actions:['Сравнение ожидаемого и фактического эффекта','Формирование выводов','Определение направлений эволюции'],
+    artifacts:['Паспорт — Блок 6 (результаты и выводы)'],
+    owners:['Директор IT','CEO','Тех лид','Руководитель продукта','Автор идеи'],
+    input:{ text:'Данные по метрикам за период эксплуатации',
+            example:'Аналитика за 3 мес: ср. время регистрации — 14 мин, конверсия — 87%' },
+    output:{ text:'Выводы + направления эволюции — Блок 6 закрыт',
+             example:'«Цели достигнуты. Направления: ИНН/СНИЛС. Новая инициатива: PRJ-2026-061»' } }
+];
+
+// ----- Реальные колонки МояКоманды (team-tasks/37) + детализация Kaiten внутри «⚙️ Создание» -----
+const columns = [
+  // --- МояКоманда (pre-создание) — 13 колонок воронки ---
+  { id:'team-idea', sys:'team', title:'Идея',
+    desc:'Сотрудник или руководитель фиксирует идею с обоснованием ценности через приложение.',
+    stages:[1], owners:['Автор идеи','Руководитель отдела'], norm:'1–2 дн' },
+  { id:'team-initiative', sys:'team', title:'Инициатива',
+    desc:'Руководитель отдела оформляет идею как карточку инициативы с 7 обязательными полями.',
+    stages:[2], owners:['Руководитель отдела'], norm:'1 дн' },
+  { id:'team-check', sys:'team', title:'Проверка на актуальность',
+    desc:'РП проверяет инициативу на соответствие стратегии, принимает решение «в работу» или «отказ». Создаёт Паспорт (Блок 1).',
+    stages:[3], owners:['Руководитель продукта'], norm:'3 дн' },
+  { id:'team-demand', sys:'team', title:'Оценка востребованности',
+    desc:'РП валидирует спрос у целевой аудитории через опрос / custdev-интервью / тест гипотезы.',
+    stages:[4], owners:['Руководитель продукта'], norm:'10 дн' },
+  { id:'team-effect', sys:'team', title:'Оценка эффекта',
+    desc:'РП определяет метрику успеха и ожидаемое её изменение в измеримых показателях.',
+    stages:[5], owners:['Руководитель продукта'], norm:'3 дн' },
+  { id:'team-finance', sys:'team', title:'Финансовый расчёт «на салфетке»',
+    desc:'РП делает быструю прикидку экономического эффекта и окупаемости. Блок 2 паспорта закрывается.',
+    stages:[6], owners:['Руководитель продукта'], norm:'3 дн' },
+  { id:'team-gate-a', sys:'gate', title:'🚦 Очередь инициатив',
+    desc:'Gate A — шлюз Go / No-Go по 4 критериям. Карточки ждут вердикта РП за 3 дня, далее ожидают освобождения ресурсов.',
+    stages:[], owners:['Руководитель продукта'], norm:'3 дн (решение)',
+    gate:true },
+  { id:'team-reject', sys:'reject', title:'Отклонённые идеи',
+    desc:'Тупиковая ветвь. Отказы на этапах 3–6 и на Gate A. Фиксируется причина и автор решения — как база знаний для будущих инициатив.',
+    stages:[], owners:['Руководитель продукта'], norm:'—' },
+
+  // --- МояКоманда · ⚙️ Создание (МК-обёртка, внутри которой детализация Kaiten) ---
+  { id:'team-create', sys:'team', title:'⚙️ Создание',
+    desc:'В МК это одна колонка. Фактическая работа ведётся в Kaiten: проектирование → комитет → разработка → релиз. Статус в МК синхронизируется РП.',
+    stages:[], owners:['Руководитель продукта'], norm:'~6–9 мес',
+    wrapper:true },
+
+  // --- Kaiten (конвейер внутри «⚙️ Создание») ---
+  { id:'ktn-design', sys:'kaiten', title:'Проектирование',
+    desc:'Прототип → аналитика → Hi-fi дизайн → упаковка ТЗ. Внутри: 🔍 Tech Lead review (30 мин) + 🛡 Security/Support checklist в ТЗ.',
+    stages:[7,8,9,10], owners:['Дизайнер','Бизнес-аналитик','Тех лид','Руководитель продукта'], norm:'~32 дн',
+    addons:[
+      { b:'🔍 Tech Lead review (внутри)', t:'30-мин встреча БА + Тех лид перед ТЗ. Вердикт Green/Yellow/Red по 5 категориям.' },
+      { b:'🛡 Раздел «Операционная готовность» в ТЗ', t:'ИБ + Support вовлекаются на этапе ТЗ, а не на релизе.' }
+    ] },
+  { id:'ktn-research', sys:'kaiten', title:'IT ресерч и оценка',
+    desc:'Техническая оценка объёма, инфраструктуры и рисков по готовому ТЗ.',
+    stages:[11], owners:['Тех лид'], norm:'5 дн' },
+  { id:'ktn-finance', sys:'kaiten', title:'Финансовая оценка',
+    desc:'Полный бюджет, ROI и срок окупаемости на основе тех. оценки.',
+    stages:[12], owners:['Руководитель финансов'], norm:'3 дн' },
+  { id:'ktn-committee', sys:'kaiten', title:'Проектный комитет',
+    desc:'Ключевая точка решения: одобрен / доработка / отклонён. Выделение ресурса и места в дорожной карте.',
+    stages:[13], owners:['Директор IT','CEO','Руководитель продукта'], norm:'5 дн' },
+  { id:'ktn-dev', sys:'kaiten', title:'Разработка',
+    desc:'Декомпозиция в бэклог и непосредственная разработка. Code review, внутреннее тестирование.',
+    stages:[14,15], owners:['Руководитель департамента разработки','Руководитель проекта'], norm:'≥2 спринта' },
+  { id:'ktn-test', sys:'kaiten', title:'Интеграционное тестирование',
+    desc:'Прогон сценариев, поиск и исправление дефектов, интеграция со смежными системами.',
+    stages:[16], owners:['Руководитель проекта','Тех лид'], norm:'1 спринт' },
+  { id:'ktn-accept', sys:'kaiten', title:'Сдача проекта',
+    desc:'Проверка соответствия ТЗ и макетам. Подписание акта приёмки руководителем продукта.',
+    stages:[17], owners:['Руководитель продукта'], norm:'1 спринт' },
+  { id:'ktn-handoff', sys:'kaiten', title:'Передача на сервис',
+    desc:'Инструкции для поддержки, заключение ИБ, проверка операционной готовности.',
+    stages:[18], owners:['Лид поддержки','Специалист ИБ'], norm:'3 дн' },
+  { id:'ktn-release', sys:'kaiten', title:'Релиз',
+    desc:'Развёртывание в production, базовые проверки, мониторинг деплоя.',
+    stages:[19], owners:['Тех лид','DevOps инженер'], norm:'1 дн' },
+  { id:'ktn-done', sys:'done', title:'Готово',
+    desc:'Работа в Kaiten завершена. Функционал в production. Карточка закрывается, инициатива возвращается в «Мою команду» на пилот.',
+    stages:[], owners:['Руководитель проекта'], norm:'—' },
+
+  // --- Моя команда (post) ---
+  { id:'team-pilot', sys:'team', title:'Опытная эксплуатация',
+    desc:'Пилотный период с усиленным мониторингом метрик и сбором обратной связи.',
+    stages:[20], owners:['Руководитель продукта','Руководитель направления'], norm:'14 дн' },
+  { id:'team-prod', sys:'team', title:'Промышленная эксплуатация',
+    desc:'Штатная работа функционала. Поддержка принимает полную ответственность.',
+    stages:[21], owners:['Руководитель направления'], norm:'—' },
+  { id:'team-review', sys:'team', title:'Обзор результатов',
+    desc:'Финальный анализ: ожидание vs факт. Выводы и направления эволюции — Блок 6 паспорта.',
+    stages:[22], owners:['Директор IT','CEO','Руководитель продукта','Автор идеи'], norm:'5 дн' },
+  { id:'team-done', sys:'done', title:'Завершено',
+    desc:'Инициатива закрыта, результаты зафиксированы. Возможно рождение новых инициатив.',
+    stages:[], owners:['Руководитель продукта'], norm:'—' }
+];
+
+// ----- Render -----
+const board = document.getElementById('board');
+const sysLabels = {
+  team:{ lbl:'Моя команда', dot:'team' },
+  kaiten:{ lbl:'Kaiten «Проекты»', dot:'kaiten' },
+  reject:{ lbl:'Моя команда', dot:'team' },
+  done:{ lbl:'Kaiten / МК', dot:'kaiten' }
+};
+
+function stageChipsHTML(stageNums){
+  if (!stageNums || !stageNums.length) return '';
+  return '<div class="stage-chips">' + stageNums.map(n => {
+    const s = stages.find(x => x.n === n);
+    return `<span class="stage-chip" onclick="event.stopPropagation(); openStage(${n})"><span class="n">${n}</span>${s.name}</span>`;
+  }).join('') + '</div>';
+}
+
+function colCardHTML(c, extraClass){
+  const sysKey =
+    c.sys === 'reject' ? 'reject' :
+    c.sys === 'done'   ? 'done'   :
+    c.sys === 'gate'   ? 'gate'   : c.sys;
+  const badgeText =
+    c.sys === 'team'   ? 'МК' :
+    c.sys === 'kaiten' ? 'Kaiten' :
+    c.sys === 'reject' ? 'МК · отказ' :
+    c.sys === 'gate'   ? 'МК · Gate A' : 'финал';
+  const ownersTags = c.owners.map(o => `<span class="owner-tag">${o}</span>`).join('');
+  const gateBlock = c.gate ? `
+    <div class="gate-inline">
+      <div class="gate-t">🚦 Gate A — Go / No-Go</div>
+      4 критерия: востребованность ≥60%, эффект ≥10% или ≥100K₽/мес, окупаемость ≤12 мес, OKR-фит. РП за 3 дня.
+      <b>Go</b> → МК «⚙️ Создание» + Kaiten «Проектирование». <b>No-Go</b> → «Отклонённые идеи».
+    </div>` : '';
+  const addonsBlock = c.addons ? c.addons.map(a =>
+    `<div class="col-addon"><b>${a.b}</b>${a.t}</div>`).join('') : '';
+  const cls = ['col', sysKey, extraClass || ''].filter(Boolean).join(' ');
+  return `
+    <div class="${cls}" onclick="openCol('${c.id}')">
+      <div class="col-head">
+        <div class="col-name">${c.title}</div>
+        <div class="col-badge">${badgeText}</div>
+      </div>
+      <div class="col-desc">${c.desc}</div>
+      ${c.norm && c.norm !== '—' ? `<span class="col-norm">⏱ ${c.norm}</span>` : ''}
+      ${stageChipsHTML(c.stages)}
+      ${gateBlock}
+      ${addonsBlock}
+      <div class="col-owners">${ownersTags}</div>
+    </div>`;
+}
+
+// Group columns by system block with handoffs
+const teamPreIds = ['team-idea','team-initiative','team-check','team-demand','team-effect','team-finance','team-gate-a','team-reject'];
+const teamPre    = columns.filter(c => teamPreIds.includes(c.id));
+const createWrap = columns.find(c => c.id === 'team-create');
+const ktnCols    = columns.filter(c => c.sys === 'kaiten' || c.id === 'ktn-done');
+const teamPost   = columns.filter(c => ['team-pilot','team-prod','team-review','team-done'].includes(c.id));
+
+let html = '';
+
+// --- МК pre: 6 этапных + Gate A + Отклонённые ---
+html += `<div class="sys-group team">
+  <div class="sys-title"><span class="sys-dot"></span>МояКоманда · от идеи до Gate A</div>
+  <div class="cols">${teamPre.map(colCardHTML).join('')}</div>
+</div>`;
+
+// --- Handoff: Gate A Go → МК «Создание» + Kaiten «Проектирование» ---
+html += `<div class="handoff">
+  <div class="arrow">→</div>
+  <div class="label">Gate A: Go</div>
+  <div class="sub">МК → «⚙️ Создание»<br>+ Kaiten → «Проектирование»</div>
+</div>`;
+
+// --- МК-обёртка «⚙️ Создание», внутри — Kaiten-детализация ---
+html += `<div class="create-wrapper">
+  <div class="wrap-head">
+    <div class="wrap-title"><span class="sys-dot"></span>МояКоманда · ⚙️ Создание</div>
+    <div class="wrap-sub">одна колонка МК · конвейер детализируется в Kaiten</div>
+  </div>
+  ${colCardHTML(createWrap, 'wrapper-head')}
+  <div class="sys-group kaiten" style="margin-top:4px;">
+    <div class="sys-title"><span class="sys-dot"></span>Kaiten «Проекты» · проектирование → релиз</div>
+    <div class="cols">${ktnCols.map(colCardHTML).join('')}</div>
+  </div>
+</div>`;
+
+// --- Handoff: после «Готово» → МК «Опытная эксплуатация» ---
+html += `<div class="handoff">
+  <div class="arrow">→</div>
+  <div class="label">Kaiten «Готово»</div>
+  <div class="sub">Возврат в МК<br>→ «Опытная эксплуатация»</div>
+</div>`;
+
+// --- МК post: пилот → промышленная → обзор → завершено ---
+html += `<div class="sys-group team">
+  <div class="sys-title"><span class="sys-dot"></span>МояКоманда · пилот → завершение</div>
+  <div class="cols">${teamPost.map(colCardHTML).join('')}</div>
+</div>`;
+
+board.innerHTML = html;
+
+// Legend
+const legend = document.getElementById('legend');
+legend.innerHTML = [
+  { c:'#60a5fa', t:'МояКоманда (колонки воронки team-tasks/37)' },
+  { c:'#7c3aed', t:'Kaiten (конвейер внутри «⚙️ Создание»)' },
+  { c:'#ea580c', t:'🚦 Gate A — Очередь инициатив' },
+  { c:'#dc2626', t:'Отклонённые идеи' },
+  { c:'#16a34a', t:'Готово / Завершено' },
+  { c:'#d97706', t:'TO-BE улучшения (Tech Lead review, Operational readiness)' }
+].map(x => `<div class="legend-item"><div class="legend-dot" style="background:${x.c}"></div>${x.t}</div>`).join('');
+
+// Modals
+function openStage(n) {
+  const s = stages.find(x => x.n === n);
+  if (!s) return;
+  const col = columns.find(c => c.id === s.col);
+  const sysLbl =
+    col.sys === 'team'   ? 'МояКоманда' :
+    col.sys === 'kaiten' ? 'Kaiten «Проекты»' :
+    col.sys === 'reject' ? 'МояКоманда · «Отклонённые идеи»' :
+    col.sys === 'gate'   ? 'МояКоманда · Gate A' : 'Финальное состояние';
+  document.getElementById('modalTitle').innerHTML =
+    `Этап ${s.n}. ${s.name}<small>Колонка: ${col.title} · Система: ${sysLbl}</small>`;
+  document.getElementById('modalBody').innerHTML = `
+    <h4>Описание</h4><p>${s.description}</p>
+    <h4>Что делается</h4><ul>${s.actions.map(a => `<li>${a}</li>`).join('')}</ul>
+    <h4>Артефакты</h4><ul>${s.artifacts.map(a => `<li>${a}</li>`).join('')}</ul>
+    <h4>Ответственные</h4><ul>${s.owners.map(o => `<li>${o}</li>`).join('')}</ul>
+    <h4>Вход → выход</h4>
+    <div class="io">
+      <div class="io-block in"><h5>📥 Вход</h5><p>${s.input.text}</p><div class="example">${s.input.example}</div></div>
+      <div class="io-block out"><h5>📤 Выход</h5><p>${s.output.text}</p><div class="example">${s.output.example}</div></div>
+    </div>`;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function openCol(id) {
+  const c = columns.find(x => x.id === id);
+  if (!c) return;
+  const sysLbl =
+    c.sys === 'team'   ? 'МояКоманда' :
+    c.sys === 'kaiten' ? 'Kaiten «Проекты»' :
+    c.sys === 'reject' ? 'МояКоманда · «Отклонённые идеи»' :
+    c.sys === 'gate'   ? 'МояКоманда · Gate A' : 'Финальное состояние';
+  const stageList = c.stages.map(n => {
+    const s = stages.find(x => x.n === n);
+    return `<li><b>Этап ${n}. ${s.name}</b> — ${s.description}</li>`;
+  }).join('');
+  const gateHTML = c.gate ? `
+    <h4>🚦 Gate A — Go / No-Go</h4>
+    <p>Отдельная колонка МК <b>«🚦 Очередь инициатив»</b>. Решение РП за 3 рабочих дня после закрытия Блока 2 паспорта.</p>
+    <ul>
+      <li>Востребованность: ≥60% ЦА (n≥30) — 🟢; 40–60% или n=15–30 — 🟡; иначе 🔴</li>
+      <li>Размер эффекта: ≥10% метрики ИЛИ ≥100K₽/мес — 🟢</li>
+      <li>Окупаемость: ≤12 мес — 🟢; 12–24 мес — 🟡; &gt;24 мес — 🔴</li>
+      <li>Стратегический фит: в OKR — 🟢</li>
+    </ul>
+    <p><b>Матрица решений:</b></p>
+    <ul>
+      <li>Все 🟢 → <b>Go</b>: карточка МК → «⚙️ Создание», карточка Kaiten → «Проектирование»</li>
+      <li>1 🟡 + остальные 🟢 → <b>Go с условием</b> (условие фиксируется в паспорте)</li>
+      <li>≥2 🟡 или ≥1 🔴 → <b>No-Go</b>: карточка МК → «Отклонённые идеи»</li>
+      <li>Спорно → эскалация РП + Директор IT</li>
+    </ul>` : '';
+  const wrapperHTML = c.wrapper ? `
+    <h4>⚙️ Что внутри этой колонки</h4>
+    <p>Пока карточка стоит в «⚙️ Создание» в МояКоманде, параллельная карточка в Kaiten проходит полный конвейер этапов 7–19 (проектирование → комитет → разработка → релиз). Связь между карточками — через внешнюю ссылку в Kaiten-карточке.</p>
+    <p><b>Правила синхронизации:</b></p>
+    <ul>
+      <li>Вход в «⚙️ Создание» — одновременно с созданием Kaiten-карточки в «Проектирование» (по решению Go на Gate A).</li>
+      <li>Выход из «⚙️ Создание» — когда в Kaiten карточка доходит до «Готово» и релиз в проде.</li>
+      <li>Статус-репорт — РП обновляет цвет/лейбл МК-карточки при смене Kaiten-колонки.</li>
+    </ul>` : '';
+  document.getElementById('modalTitle').innerHTML =
+    `${c.title}<small>Система: ${sysLbl}${c.norm && c.norm !== '—' ? ` · Норма: ${c.norm}` : ''}</small>`;
+  document.getElementById('modalBody').innerHTML = `
+    <h4>Описание колонки</h4><p>${c.desc}</p>
+    ${stageList ? `<h4>Этапы внутри колонки</h4><ul>${stageList}</ul>` : ''}
+    <h4>Ответственные</h4><ul>${c.owners.map(o => `<li>${o}</li>`).join('')}</ul>
+    ${gateHTML}
+    ${wrapperHTML}
+    ${c.addons ? '<h4>TO-BE улучшения</h4>' + c.addons.map(a => `<p><b>${a.b}:</b> ${a.t}</p>`).join('') : ''}`;
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+</script>
+
+</body>
+</html>
