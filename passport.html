@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Паспорт проекта — PRJ-2026-042 Авто-верификация</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #f4f5f7;
+    color: #1a1a2e;
+    padding: 32px 0 60px;
+  }
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+  .back-link {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 13px; color: #6b7280; text-decoration: none;
+    margin-bottom: 16px;
+  }
+  .back-link:hover { color: #1d4ed8; }
+
+  header.doc-header {
+    background: #fff; border-radius: 14px;
+    padding: 24px 28px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+    border-left: 5px solid #059669;
+  }
+  header.doc-header h1 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+  header.doc-header .subtitle { font-size: 13.5px; color: #6b7280; }
+  header.doc-header .meta {
+    display: flex; flex-wrap: wrap; gap: 10px;
+    margin-top: 14px;
+  }
+  .meta-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; padding: 4px 10px; border-radius: 14px;
+    background: #f3f4f6; color: #374151;
+  }
+  .meta-chip.status { background: #fef3c7; color: #92400e; }
+  .meta-chip.id { background: #dbeafe; color: #1d4ed8; font-weight: 700; }
+
+  .block {
+    background: #fff; border-radius: 12px;
+    padding: 20px 24px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    margin-bottom: 16px;
+    border-left: 4px solid #e5e7eb;
+  }
+  .block.b1 { border-left-color: #60a5fa; }
+  .block.b2 { border-left-color: #60a5fa; }
+  .block.b2a { border-left-color: #ea580c; }
+  .block.b3 { border-left-color: #7c3aed; }
+  .block.b4 { border-left-color: #7c3aed; }
+  .block.b5 { border-left-color: #7c3aed; }
+  .block.b6 { border-left-color: #16a34a; }
+  .block.b7 { border-left-color: #6b7280; }
+
+  .block h2 {
+    font-size: 17px; font-weight: 700;
+    margin-bottom: 4px;
+    display: flex; align-items: baseline; gap: 10px;
+  }
+  .block h2 .num {
+    font-size: 12px; color: #6b7280; font-weight: 500;
+    background: #f3f4f6; padding: 2px 8px; border-radius: 10px;
+    flex-shrink: 0;
+  }
+  .block .stage-ref {
+    font-size: 12px; color: #6b7280; margin-bottom: 14px;
+    font-style: italic;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  table th, table td {
+    padding: 8px 12px;
+    text-align: left;
+    border-bottom: 1px solid #f3f4f6;
+    vertical-align: top;
+  }
+  table th {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+    color: #6b7280; font-weight: 700;
+    background: #f9fafb;
+  }
+  table tr:last-child td { border-bottom: none; }
+  table td.field { font-weight: 600; color: #1f2937; width: 30%; }
+  table td.source {
+    width: 22%;
+    font-size: 11.5px; color: #6b7280;
+    white-space: nowrap;
+  }
+  table td.value {
+    color: #374151; font-style: italic;
+  }
+  table td.value.filled { color: #1f2937; font-style: normal; }
+
+  .gate-grid {
+    display: grid; grid-template-columns: 1fr 80px 1fr;
+    gap: 10px; align-items: center;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+  .gate-grid .criterion { font-weight: 600; color: #1f2937; }
+  .gate-grid .mark { text-align: center; font-size: 18px; }
+  .gate-grid .comment { color: #6b7280; font-size: 12px; font-style: italic; }
+
+  .decision-row {
+    display: flex; gap: 16px; flex-wrap: wrap;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: #ecfdf5; border-radius: 8px;
+    border-left: 3px solid #16a34a;
+  }
+  .decision-row .d-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+  .decision-row .d-value { font-size: 14px; font-weight: 700; color: #065f46; }
+
+  .journal-table { font-size: 12px; }
+  .journal-table th, .journal-table td { padding: 6px 8px; }
+  .journal-table td.stage-name { font-weight: 600; }
+  .journal-table td.done { color: #16a34a; font-weight: 600; }
+  .journal-table td.pending { color: #9ca3af; }
+  .journal-table .status-green  { color: #16a34a; }
+  .journal-table .status-yellow { color: #d97706; }
+  .journal-table .status-red    { color: #dc2626; }
+  .journal-table tr.gate-row td { background: #fff7ed; border-top: 2px dashed #ea580c; border-bottom: 2px dashed #ea580c; }
+
+  .note {
+    padding: 10px 14px;
+    background: #fef9c3; border-left: 3px solid #d97706;
+    border-radius: 6px;
+    font-size: 12.5px; color: #78350f;
+    margin-top: 12px;
+  }
+  .note b { color: #92400e; }
+
+  @media (max-width: 700px) {
+    table { font-size: 12px; }
+    table td.field { width: 40%; }
+    table td.source { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <a class="back-link" href="kanban.html">← Вернуться на канбан-доску</a>
+
+  <header class="doc-header">
+    <h1>Паспорт проекта</h1>
+    <div class="subtitle">Пример заполнения на учебной инициативе (курсив = заглушки / пример). Создаётся на этапе 3 и наполняется до этапа 22.</div>
+    <div class="meta">
+      <span class="meta-chip id">PRJ-2026-042</span>
+      <span class="meta-chip">Автоматическая верификация документов водителя</span>
+      <span class="meta-chip status">Статус: В оценке</span>
+      <span class="meta-chip">Создан: 12.03.2026</span>
+      <span class="meta-chip">РП: Петрова А.С.</span>
+    </div>
+  </header>
+
+  <!-- Блок 1 -->
+  <section class="block b1">
+    <h2>Блок 1. Основное <span class="num">Этап 3 · МК · Проверка на актуальность</span></h2>
+    <div class="stage-ref">Заполняется при входе карточки в колонку «Проверка на актуальность». Часть полей наследуется из карточки инициативы (этап 2), остальное заполняет РП.</div>
+    <table>
+      <thead><tr><th>Поле</th><th>Источник</th><th>Значение</th></tr></thead>
+      <tbody>
+        <tr><td class="field">ID проекта</td><td class="source">РП (этап 3)</td><td class="value filled">PRJ-2026-042</td></tr>
+        <tr><td class="field">Название проекта</td><td class="source">Из карточки (← Заголовок)</td><td class="value filled">Автоматическая верификация документов водителя</td></tr>
+        <tr><td class="field">Дата создания</td><td class="source">РП (этап 3)</td><td class="value filled">12.03.2026</td></tr>
+        <tr><td class="field">Статус</td><td class="source">РП (этап 3)</td><td class="value filled">В оценке</td></tr>
+        <tr><td class="field">Автор идеи</td><td class="source">Из карточки</td><td class="value filled">Иванов И.И., операционный директор</td></tr>
+        <tr><td class="field">РП (Руководитель продукта)</td><td class="source">РП (этап 3)</td><td class="value filled">Петрова А.С.</td></tr>
+        <tr><td class="field">Сервис</td><td class="source">Из карточки</td><td class="value filled">Мобильное приложение</td></tr>
+        <tr><td class="field">Область продукта</td><td class="source">Из карточки</td><td class="value filled">Саморегистрация</td></tr>
+        <tr><td class="field">Цель</td><td class="source">Из карточки</td><td class="value filled">Убрать ручную проверку документов менеджером при регистрации водителя</td></tr>
+        <tr><td class="field">Описание</td><td class="source">Из карточки</td><td class="value filled">Сейчас менеджер вручную проверяет паспорт и ВУ водителя — 30–45 мин, зависит от загрузки. Предлагаем автоматическую проверку через API сервиса верификации.</td></tr>
+        <tr><td class="field">Ожидаемый итог</td><td class="source">Из карточки</td><td class="value filled">Водитель может пройти регистрацию без участия менеджера за 10–15 минут</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Блок 2 -->
+  <section class="block b2">
+    <h2>Блок 2. Предварительная оценка <span class="num">Этапы 4–6 · МК</span></h2>
+    <div class="stage-ref">Заполняет РП в колонках «Оценка востребованности» → «Оценка эффекта» → «Финансовый расчёт «на салфетке»».</div>
+    <table>
+      <thead><tr><th>Поле</th><th>Этап</th><th>Значение</th></tr></thead>
+      <tbody>
+        <tr><td class="field">Результаты custdev / опроса</td><td class="source">4</td><td class="value filled">Опросили 50 водителей: 78% сталкивались с задержками при проверке. Ср. время ожидания — 38 мин. 12 из 50 отказались от регистрации из-за долгого ожидания.</td></tr>
+        <tr><td class="field">Востребованность подтверждена</td><td class="source">4</td><td class="value filled">Да</td></tr>
+        <tr><td class="field">Метрика успеха</td><td class="source">5</td><td class="value filled">Среднее время регистрации водителя (от начала до активации аккаунта)</td></tr>
+        <tr><td class="field">Ожидаемое изменение метрики</td><td class="source">5</td><td class="value filled">Снижение с 45 до 15 минут (−67%). Конверсия в завершённую регистрацию: с 68% до 85%.</td></tr>
+        <tr><td class="field">Финансовый расчёт «на салфетке»</td><td class="source">6</td><td class="value filled">2 менеджера × 120K₽/мес = 240K₽/мес. Разработка ≈ ~30 раб. дн при 2 разработчиках ≈ 600K₽. Окупаемость ≈ 2.6 мес.</td></tr>
+        <tr><td class="field">Предварительный экономический эффект</td><td class="source">6</td><td class="value filled">Экономия 240K₽/мес (ФОТ) + рост конверсии регистраций на 17% ≈ +80 новых водителей/мес</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Подблок 2.1 Gate A -->
+  <section class="block b2a">
+    <h2>🚦 Подблок 2.1. Gate A — Go / No-Go <span class="num">МК · Очередь инициатив</span></h2>
+    <div class="stage-ref">РП заполняет за 3 рабочих дня после закрытия Блока 2. Go → карточка МК в «⚙️ Создание», Kaiten-карточка в «Проектирование». No-Go → карточка МК в «Отклонённые идеи».</div>
+    <div class="gate-grid">
+      <div class="criterion">Востребованность (≥60% ЦА, n≥30)</div>
+      <div class="mark">🟢</div>
+      <div class="comment">78% из 50 водителей подтвердили проблему</div>
+
+      <div class="criterion">Размер эффекта (≥10% метрики ИЛИ ≥100K₽/мес)</div>
+      <div class="mark">🟢</div>
+      <div class="comment">−67% по времени регистрации, экономия 240K₽/мес</div>
+
+      <div class="criterion">Окупаемость (≤12 мес)</div>
+      <div class="mark">🟢</div>
+      <div class="comment">2.6 месяца</div>
+
+      <div class="criterion">Стратегический фит (OKR продукта)</div>
+      <div class="mark">🟢</div>
+      <div class="comment">OKR «Саморегистрация без участия оператора»</div>
+    </div>
+    <div class="decision-row">
+      <div><div class="d-label">Решение</div><div class="d-value">Go</div></div>
+      <div><div class="d-label">Дата</div><div class="d-value">20.03.2026</div></div>
+      <div><div class="d-label">Автор решения</div><div class="d-value">Петрова А.С. (РП)</div></div>
+    </div>
+  </section>
+
+  <!-- Блок 3 -->
+  <section class="block b3">
+    <h2>Блок 3. Артефакты <span class="num">Этапы 7–10 · Kaiten · Проектирование</span></h2>
+    <div class="stage-ref">Карточка в МК остаётся в колонке «⚙️ Создание». Полный конвейер ведётся в Kaiten-колонке «Проектирование».</div>
+    <table>
+      <thead><tr><th>Артефакт</th><th>Этап</th><th>Ссылка</th></tr></thead>
+      <tbody>
+        <tr><td class="field">Lo-fi прототип интерфейса</td><td class="source">7</td><td class="value"><a href="#">Figma — Lo-fi прототип →</a></td></tr>
+        <tr><td class="field">Документ с бизнес-требованиями (AS-IS / TO-BE)</td><td class="source">8</td><td class="value"><a href="#">Verif AS-IS/TO-BE →</a></td></tr>
+        <tr><td class="field">Hi-fi макеты дизайна</td><td class="source">9</td><td class="value"><a href="#">Figma — Hi-fi макеты →</a></td></tr>
+        <tr><td class="field">Техническое задание (ТЗ)</td><td class="source">10</td><td class="value"><a href="#">ТЗ Авто-верификация v1.0 →</a></td></tr>
+        <tr><td class="field">Раздел «Операционная готовность» в ТЗ (ИБ + Support)</td><td class="source">10</td><td class="value"><a href="#">→ раздел в ТЗ</a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Блок 4 -->
+  <section class="block b4">
+    <h2>Блок 4. Техническая и финансовая оценка <span class="num">Этапы 11–12 · Kaiten</span></h2>
+    <div class="stage-ref">IT ресерч (этап 11) → Финансовая оценка (этап 12). Карточка МК остаётся в «⚙️ Создание».</div>
+    <table>
+      <thead><tr><th>Поле</th><th>Этап</th><th>Значение</th></tr></thead>
+      <tbody>
+        <tr><td class="field">Оценка объёма разработки</td><td class="source">11</td><td class="value filled">Backend: ~30 дн. Frontend (app): ~20 дн. Итого: ~30 рабочих дней при 2 разработчиках параллельно.</td></tr>
+        <tr><td class="field">Оценка инфраструктурных затрат</td><td class="source">11</td><td class="value filled">API верификации: 12K₽/мес (до 1000 проверок). Дополнительных серверов не требуется.</td></tr>
+        <tr><td class="field">Технические риски</td><td class="source">11</td><td class="value filled">Зависимость от внешнего API (SLA 99.5%). Нужен fallback на ручную проверку.</td></tr>
+        <tr><td class="field">Бюджет проекта</td><td class="source">12</td><td class="value filled">640K₽ (разработка) + 12K₽/мес (инфра)</td></tr>
+        <tr><td class="field">Ожидаемый ROI</td><td class="source">12</td><td class="value filled">2.3× за первый год</td></tr>
+        <tr><td class="field">Срок окупаемости</td><td class="source">12</td><td class="value filled">5 месяцев</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Блок 5 -->
+  <section class="block b5">
+    <h2>Блок 5. Решение Проектного комитета (Gate B) <span class="num">Этап 13 · Kaiten · Проектный комитет</span></h2>
+    <div class="stage-ref">Ключевая точка запуска в разработку. Полный Паспорт (блоки 1–4) рассматривается комитетом: Директор IT + CEO + РП + Автор идеи.</div>
+    <table>
+      <tbody>
+        <tr><td class="field">Дата комитета</td><td class="value filled">28.04.2026</td></tr>
+        <tr><td class="field">Решение</td><td class="value filled"><b>Одобрен</b></td></tr>
+        <tr><td class="field">Место в дорожной карте</td><td class="value filled">Q3 2026, июль–август</td></tr>
+        <tr><td class="field">Выделенный ресурс</td><td class="value filled">2 разработчика (Смирнов + Козлов), дизайнер на поддержке</td></tr>
+        <tr><td class="field">Комментарии комитета</td><td class="value filled">Обязательно реализовать fallback на ручную проверку. Сообщить о старте пилота операционному директору.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Блок 6 -->
+  <section class="block b6">
+    <h2>Блок 6. Результаты <span class="num">Этап 22 · МК · Обзор результатов</span></h2>
+    <div class="stage-ref">Заполняется после промышленной эксплуатации. Сравнение «ожидание vs факт», выводы, направления эволюции.</div>
+    <table>
+      <tbody>
+        <tr><td class="field">Дата обзора</td><td class="value filled">15.11.2026</td></tr>
+        <tr><td class="field">Ожидаемое значение метрики</td><td class="value filled">Время регистрации ≤ 15 мин, конверсия ≥ 85%</td></tr>
+        <tr><td class="field">Фактическое значение метрики</td><td class="value filled">Время регистрации — 14 мин. Конверсия — 87%.</td></tr>
+        <tr><td class="field">Цели достигнуты</td><td class="value filled"><b>Да</b></td></tr>
+        <tr><td class="field">Выводы</td><td class="value filled">Функционал работает стабильно. Fallback использовался в 3% случаев. Поддержка получила 8 обращений за 2 месяца.</td></tr>
+        <tr><td class="field">Направления эволюции</td><td class="value filled">Добавить верификацию СНИЛС и ИНН. Улучшить UX экрана ожидания проверки.</td></tr>
+        <tr><td class="field">Новые инициативы</td><td class="value filled">PRJ-2026-061: Верификация ИНН/СНИЛС</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Блок 7 Журнал этапов -->
+  <section class="block b7">
+    <h2>Блок 7. Журнал этапов <span class="num">Сквозной · этапы 1–22</span></h2>
+    <div class="stage-ref">Контроль cycle time. Итого до Gate B: ~65 рабочих дней. РП обновляет статус при смене колонки.</div>
+    <table class="journal-table">
+      <thead><tr><th>№</th><th>Этап</th><th>Колонка · Система</th><th>Вход</th><th>Выход</th><th>Факт (дн)</th><th>Норма</th><th>Статус</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td class="stage-name">Идея</td><td>Идея · МК</td><td>12.03</td><td>13.03</td><td>1</td><td>1–2</td><td class="status-green">🟢</td></tr>
+        <tr><td>2</td><td class="stage-name">Инициатива</td><td>Инициатива · МК</td><td>13.03</td><td>14.03</td><td>1</td><td>1</td><td class="status-green">🟢</td></tr>
+        <tr><td>3</td><td class="stage-name">Первичная проверка</td><td>Проверка на актуальность · МК</td><td>14.03</td><td>17.03</td><td>3</td><td>3</td><td class="status-green">🟢</td></tr>
+        <tr><td>4</td><td class="stage-name">Оценка востребованности</td><td>Оценка востребованности · МК</td><td>17.03</td><td>27.03</td><td>10</td><td>10</td><td class="status-green">🟢</td></tr>
+        <tr><td>5</td><td class="stage-name">Оценка эффекта</td><td>Оценка эффекта · МК</td><td>27.03</td><td>30.03</td><td>3</td><td>3</td><td class="status-green">🟢</td></tr>
+        <tr><td>6</td><td class="stage-name">Финансовый расчёт</td><td>Финансовый расчёт · МК</td><td>30.03</td><td>02.04</td><td>3</td><td>3</td><td class="status-green">🟢</td></tr>
+        <tr class="gate-row"><td>—</td><td class="stage-name">🚦 Gate A</td><td>🚦 Очередь инициатив · МК</td><td>02.04</td><td>03.04</td><td>1</td><td>3</td><td class="status-green">🟢</td></tr>
+        <tr><td>7</td><td class="stage-name">Прототипирование интерфейса</td><td>⚙️ Создание · МК / Проектирование · Kaiten</td><td>03.04</td><td>17.04</td><td>10</td><td>10</td><td class="status-green">🟢</td></tr>
+        <tr><td>8</td><td class="stage-name">Аналитика</td><td>⚙️ Создание · МК / Проектирование · Kaiten</td><td>17.04</td><td>30.04</td><td>10</td><td>10</td><td class="status-green">🟢</td></tr>
+        <tr><td>9</td><td class="stage-name">Разработка дизайна</td><td>⚙️ Создание · МК / Проектирование · Kaiten</td><td>30.04</td><td>11.05</td><td>7</td><td>7</td><td class="status-green">🟢</td></tr>
+        <tr><td>10</td><td class="stage-name">Упаковка ТЗ</td><td>⚙️ Создание · МК / Проектирование · Kaiten</td><td>11.05</td><td>18.05</td><td>5</td><td>5</td><td class="status-green">🟢</td></tr>
+        <tr><td>11</td><td class="stage-name">Оценка ТЗ</td><td>⚙️ Создание · МК / IT ресерч · Kaiten</td><td>18.05</td><td>25.05</td><td>5</td><td>5</td><td class="status-green">🟢</td></tr>
+        <tr><td>12</td><td class="stage-name">Финансовая оценка</td><td>⚙️ Создание · МК / Финансовая оценка · Kaiten</td><td>25.05</td><td>28.05</td><td>3</td><td>3</td><td class="status-green">🟢</td></tr>
+        <tr class="gate-row"><td>13</td><td class="stage-name">🚦 Проектный комитет (Gate B)</td><td>⚙️ Создание · МК / Проектный комитет · Kaiten</td><td>28.05</td><td>04.06</td><td>5</td><td>5</td><td class="status-green">🟢</td></tr>
+        <tr><td>14</td><td class="stage-name">Бэклог разработки</td><td>⚙️ Создание · МК / Разработка · Kaiten</td><td>04.06</td><td class="pending">…</td><td class="pending">…</td><td>10 дн</td><td class="pending">…</td></tr>
+        <tr><td>15</td><td class="stage-name">Разработка</td><td>⚙️ Создание · МК / Разработка · Kaiten</td><td class="pending">…</td><td class="pending">…</td><td class="pending">…</td><td>≥20 дн</td><td class="pending">…</td></tr>
+        <tr><td>16</td><td class="stage-name">Интеграционное тестирование</td><td>⚙️ Создание · МК / Тестирование · Kaiten</td><td class="pending">…</td><td class="pending">…</td><td class="pending">…</td><td>10 дн</td><td class="pending">…</td></tr>
+        <tr><td>17</td><td class="stage-name">Сдача проекта</td><td>⚙️ Создание · МК / Сдача · Kaiten</td><td class="pending">…</td><td class="pending">…</td><td class="pending">…</td><td>10 дн</td><td class="pending">…</td></tr>
+        <tr><td>18</td><td class="stage-name">Передача на сервис</td><td>⚙️ Создание · МК / Передача · Kaiten</td><td class="pending">…</td><td class="pending">…</td><td class="pending">…</td><td>3 дн</td><td class="pending">…</td></tr>
+        <tr><td>19</td><td class="stage-name">Релиз</td><td>⚙️ Создание · МК / Релиз · Kaiten</td><td class="pending">…</td><td class="pending">…</td><td class="pending">…</td><td>1 дн</td><td class="pending">…</td></tr>
+        <tr><td>—</td><td class="stage-name">Готово (Kaiten) → возврат в МК</td><td>⚙️ Создание · МК / Готово · Kaiten</td><td class="pending">…</td><td class="pending">…</td><td class="pending">…</td><td>—</td><td class="pending">…</td></tr>
+        <tr><td>20</td><td class="stage-name">Опытная эксплуатация</td><td>Опытная эксплуатация · МК</td><td class="pending">…</td><td class="pending">…</td><td class="pending">…</td><td>14 дн</td><td class="pending">…</td></tr>
+        <tr><td>21</td><td class="stage-name">Промышленная эксплуатация</td><td>Промышленная эксплуатация · МК</td><td class="pending">…</td><td class="pending">…</td><td class="pending">…</td><td>—</td><td class="pending">…</td></tr>
+        <tr><td>22</td><td class="stage-name">Обзор результатов</td><td>Обзор результатов · МК</td><td class="pending">…</td><td class="pending">…</td><td class="pending">…</td><td>5 дн</td><td class="pending">…</td></tr>
+        <tr><td>—</td><td class="stage-name">Завершено</td><td>✅ Завершено · МК</td><td class="pending">…</td><td>—</td><td>—</td><td>—</td><td class="pending">…</td></tr>
+      </tbody>
+    </table>
+    <div class="note">
+      <b>Обозначения:</b> <b>РП</b> — Руководитель продукта · <b>PM</b> — Руководитель проекта · <b>БА</b> — Бизнес-аналитик · <b>ТЗ</b> — Техническое задание · <b>МК</b> — МояКоманда · <b>Gate A</b> — шлюз Go/No-Go · <b>Gate B</b> — Проектный комитет.
+    </div>
+  </section>
+</div>
+
+</body>
+</html>
